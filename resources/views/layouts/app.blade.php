@@ -12,7 +12,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">Lavandería P.V.</a>
+        <a class="navbar-brand" href="#">Josma Lavandería</a>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -58,7 +58,17 @@
 <li class="nav-item">
   <a class="nav-link" href="{{ route('clientes.index') }}"><i class="bi bi-people"></i> Clientes</a>
 </li>
+   {{-- Opción EXCLUSIVA para Gerentes --}}
+            @if(Auth::user()->tipo === 'gerente')
+                <li class="nav-item ms-lg-3">
+                    <a class="btn btn-outline-light fw-bold border-2" 
+                       href="{{ route('gerencia.index') }}">
+                       <i class="bi bi-shield-lock-fill"></i> Gerencia
+                    </a>
+                </li>
+            @endif
           </ul>
+       
 
           {{-- Lado Derecho: Usuario y Salir --}}
           <div class="d-flex align-items-center">

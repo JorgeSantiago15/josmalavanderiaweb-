@@ -127,4 +127,25 @@ class CorteController extends Controller
 
         return redirect()->route('corte.index')->with('success', '¡Corte de caja guardado exitosamente!');
     }
+    // --- FUNCIONES EXCLUSIVAS DE GERENCIA ---
+
+    // 1. VER LISTA DE TODOS LOS CORTES
+    public function historial()
+    {
+        // Traemos los cortes con la información del usuario que lo hizo
+        // Ordenamos por fecha y hora (created_at) descendente
+        $cortes = CorteCaja::with('usuario')
+                           ->orderBy('fecha', 'desc')
+                           ->orderBy('created_at', 'desc')
+                           ->paginate(15); // Paginación para no saturar la pantalla
+
+        return view('corte.historial', compact('cortes'));
+    }
+
+    // 2. VER DETALLE DE UN CORTE PASADO (Read-Only)
+    public function show($id)
+    {
+        $corte = CorteCaja::with('usuario')->findOrFail($id);
+        return view('corte.show', compact('corte'));
+    }
 }
