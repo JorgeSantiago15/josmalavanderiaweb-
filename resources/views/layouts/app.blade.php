@@ -58,6 +58,10 @@
 <li class="nav-item">
   <a class="nav-link" href="{{ route('clientes.index') }}"><i class="bi bi-people"></i> Clientes</a>
 </li>
+{{-- Opción: Lista de Mantenimientos --}}
+<li class="nav-item">
+  <a class="nav-link" href="{{ route('mantenimientos.index') }}"><i class="bi bi-tools"></i> Mantenimientos</a>
+</li>
    {{-- Opción EXCLUSIVA para Gerentes --}}
             @if(Auth::user()->tipo === 'gerente')
                 <li class="nav-item ms-lg-3">

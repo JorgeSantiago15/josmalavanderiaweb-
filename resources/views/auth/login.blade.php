@@ -27,8 +27,8 @@
 
     <div class="login-card">
         <div class="text-center mb-4">
-            <h2 class="text-primary fw-bold">Lavandería P.V.</h2>
-            <p class="text-muted">Ingresa tus credenciales</p>
+            <h2 class="text-primary fw-bold">Josma Lavandería</h2>
+            <p class="text-muted"></p>
         </div>
 
         <form action="{{ route('login') }}" method="POST">

@@ -8,6 +8,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\GerenteController; // Importante
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MantenimientoController;
 // --- RUTAS PÚBLICAS ---
 Route::get('/', function () {
     return redirect()->route('login');
@@ -43,9 +44,13 @@ Route::middleware(['auth'])->group(function () {
     // Corte de Caja
     Route::get('/corte', [CorteController::class, 'index'])->name('corte.index');
     Route::post('/corte', [CorteController::class, 'store'])->name('corte.store');
-    
+    // Módulo de Mantenimiento
+Route::get('/mantenimientos', [MantenimientoController::class, 'index'])->name('mantenimientos.index');
+Route::post('/mantenimientos/urgente', [MantenimientoController::class, 'storeUrgente'])->name('mantenimientos.storeUrgente');
+Route::post('/mantenimientos/{id}/completar', [MantenimientoController::class, 'completar'])->name('mantenimientos.completar');
+Route::get('/mantenimientos/{id}', [MantenimientoController::class, 'show'])->name('mantenimientos.show'); // Para modal
 }); 
-// <--- AQUÍ SE CIERRA EL GRUPO 'AUTH' (El de todos)
+// <--- AQUÍ SE CIERRA EL GRUPO 'AUTH' (El de todos)  tailwind 
 
 
 // --- GRUPO 2: SOLO GERENCIA (Middleware 'auth' Y 'admin') ---
