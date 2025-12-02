@@ -17,4 +17,21 @@ class ClienteController extends Controller
 
         return view('clientes.index', compact('clientes'));
     }
+    // En ClienteController.php
+
+public function update(Request $request, string $id)
+{
+    // Validamos
+    $validated = $request->validate([
+        'nombre' => 'required|string|max:255',
+        'telefono' => 'required|string|max:20', // Ojo: validar que no se repita con otro cliente
+    ]);
+
+    // Buscamos y actualizamos
+    $cliente = Cliente::findOrFail($id);
+    $cliente->update($validated);
+
+    // Regresamos con mensaje de éxito
+    return redirect()->route('clientes.index')->with('success', 'Cliente actualizado correctamente.');
+}
 }

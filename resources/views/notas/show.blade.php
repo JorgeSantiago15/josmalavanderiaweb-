@@ -27,12 +27,16 @@
     <div class="card shadow-sm border-0 mb-4 ticket-area">
         <div class="card-body">
             
-            {{-- Encabezado del Ticket (Solo visible al imprimir o muy discreto en pantalla) --}}
+            {{-- Encabezado del Ticket (Solo visible al imprimir) --}}
             <div class="text-center d-none d-print-block mb-3">
                 <h3 class="fw-bold">JOSMA LAVANDERÍA</h3>
                 <p class="mb-0">Juarez 751 B, Prados Coyula, Tonalá, Jal.</p>
                 <p class="mb-0">Tel: 333-475-24-22</p>
-                <p class="small mt-2">Atendió: {{ $nota->usuario_id }}</p> {{-- Idealmente cargar relación usuario --}}
+                
+                {{-- CORRECCIÓN 1: Mostrar Nombre en lugar de ID --}}
+                <p class="small mt-2">
+                    Atendió: <strong>{{ $nota->user->name ?? 'Sistema' }}</strong>
+                </p> 
                 <hr>
             </div>
 
@@ -43,9 +47,12 @@
                 </div>
                 <div class="col-6 text-end">
                     <strong>Folio:</strong> #{{ $nota->id }}<br>
-                    <strong>Ingreso:</strong> {{ $nota->fecha_recepcion }}<br>
+                    
+                    {{-- CORRECCIÓN 2: Formato de Fechas legible --}}
+                    <strong>Ingreso:</strong> {{ \Carbon\Carbon::parse($nota->fecha_recepcion)->format('d/m/Y h:i A') }}<br>
+                    
                     @if($nota->fecha_pagado)
-                        <strong>Salida/Pago:</strong> {{ $nota->fecha_pagado }}
+                        <strong>Salida/Pago:</strong> {{ \Carbon\Carbon::parse($nota->fecha_pagado)->format('d/m/Y h:i A') }}
                     @endif
                 </div>
             </div>
@@ -89,7 +96,7 @@
     @if($nota->estado == 'en_proceso')
         <div class="row print-hide">
             <div class="col-md-8">
-                {{-- (Opcional) Aquí podrías poner historial o notas extra --}}
+                {{-- Espacio libre --}}
             </div>
             <div class="col-md-4">
                 <div class="card bg-light border-0">
@@ -108,7 +115,7 @@
                             <div class="mb-2 d-flex">
                                 <input type="number" step="0.1" name="cantidad" class="form-control me-2" value="1" placeholder="Cant.">
                                 <button type="submit" class="btn btn-primary flex-grow-1">
-                                    <i class="bi bi-plus-lg"></i> Agregar producto
+                                    <i class="bi bi-plus-lg"></i> Agregar
                                 </button>
                             </div>
                         </form>
@@ -135,9 +142,8 @@
             </div>
         </div>
     @else
-        {{-- SI NO ESTÁ EN PROCESO, SOLO MOSTRAMOS BOTÓN DE IMPRIMIR --}}
-        <div class="text-end print-hide">
-            <button onclick="window.print()" class="btn btn-warning btn-lg shadow">
+       <div class="text-end print-hide mt-4">
+            <button onclick="window.print()" class="btn btn-warning btn-lg shadow fw-bold text-dark">
                 <i class="bi bi-printer-fill"></i> IMPRIMIR TICKET
             </button>
         </div>

@@ -40,21 +40,23 @@
                         <td class="text-muted small">
                             {{ $prod->reporte_categoria ? strtoupper($prod->reporte_categoria) : '-' }}
                         </td>
-                        <td class="text-end">
-                            {{-- Botón Editar --}}
-                            <a href="{{ route('productos.edit', $prod->id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil-fill"></i> Editar
-                            </a>
-                            
-                            {{-- Formulario Borrar --}}
-                            <form action="{{ route('productos.destroy', $prod->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar {{ $prod->nombre }}?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
+                     <td class="text-end" style="width: 200px;"> {{-- Ancho fijo para evitar saltos --}}
+    <div class="d-flex justify-content-end gap-2">
+        {{-- Botón Editar --}}
+        <a href="{{ route('productos.edit', $prod->id) }}" class="btn btn-primary btn-sm flex-fill">
+            <i class="bi bi-pencil-fill"></i> Editar
+        </a>
+        
+        {{-- Formulario Borrar --}}
+        <form action="{{ route('productos.destroy', $prod->id) }}" method="POST" class="flex-fill" onsubmit="return confirm('¿Eliminar {{ $prod->nombre }}?');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-danger w-100">
+                <i class="bi bi-trash-fill"></i> Eliminar
+            </button>
+        </form>
+    </div>
+</td>
                     </tr>
                     @endforeach
                 </tbody>

@@ -38,8 +38,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/terminados', [DashboardController::class, 'indexTerminados'])->name('terminados');
     Route::get('/pagados', [DashboardController::class, 'indexPagados'])->name('pagados');
     
-    // Clientes
+   // Clientes
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    
+    // CORRECCIÓN: Usamos PUT y agregamos /{id}
+    Route::put('/clientes/{id}', [ClienteController::class, 'update'])->name('clientes.update');
 
     // Corte de Caja
     Route::get('/corte', [CorteController::class, 'index'])->name('corte.index');

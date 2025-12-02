@@ -25,10 +25,12 @@
   </head>
   <body>
 
-    <div class="login-card">
-        <div class="text-center mb-4">
+  <div class="text-center mb-4">
+            {{-- LOGO AQUÍ --}}
+            <img src="{{ asset('img/logo.png') }}" alt="Logo Josma" class="img-fluid mb-3" style="max-height: 100px;">
+            
             <h2 class="text-primary fw-bold">Josma Lavandería</h2>
-            <p class="text-muted"></p>
+            <p class="text-muted">Punto de Venta</p>
         </div>
 
         <form action="{{ route('login') }}" method="POST">

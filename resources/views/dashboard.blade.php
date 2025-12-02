@@ -26,34 +26,45 @@
 
         <div class="row">
             @foreach($notasEnProceso as $nota)
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white fw-bold d-flex justify-content-between">
-                            <span>Folio #{{ $nota->id }}</span>
-                            <span class="badge bg-warning text-dark">En Proceso</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title text-primary">{{ $nota->cliente->nombre }}</h5>
-                            <p class="card-text text-muted small mb-2">
-                                <i class="bi bi-telephone"></i> {{ $nota->cliente->telefono ?? 'Sin teléfono' }}
-                            </p>
-                            
-                            {{-- Aquí mostraremos un resumen rápido --}}
-                            <p class="card-text mt-3">
-                                <strong>Total estimado:</strong> ${{ number_format($nota->total, 2) }}
-                            </p>
-                            
-                            @if($nota->especificaciones)
-                                <div class="alert alert-warning p-2 small mb-0">
-                                    <strong>Nota:</strong> {{ Str::limit($nota->especificaciones, 50) }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="card-footer bg-white border-0">
-                           <a href="{{ route('notas.show', $nota->id) }}" class="btn btn-outline-primary btn-sm w-100">Ver / Editar Detalles</a>
-                        </div>
-                    </div>
+              <div class="col-md-4 mb-4">
+    {{-- AQUI ESTÁ LA MAGIA: border-top, border-warning y la clase 'card-hover' --}}
+    <div class="card shadow border-0 h-100 card-hover border-top border-4 border-warning">
+        
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-3">
+            <span class="text-muted small fw-bold">FOLIO #{{ $nota->id }}</span>
+            <span class="badge bg-warning text-dark rounded-pill px-3">
+                <i class="bi bi-clock-history"></i> En Proceso
+            </span>
+        </div>
+
+        <div class="card-body">
+            <h5 class="card-title text-dark fw-bold mb-1">{{ $nota->cliente->nombre }}</h5>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-telephone-fill text-primary"></i> {{ $nota->cliente->telefono ?? '---' }}
+            </p>
+            
+            <div class="p-2 bg-light rounded border mb-3">
+                <div class="d-flex justify-content-between">
+                    <span class="small text-muted">Total Estimado:</span>
+                    <span class="fw-bold text-primary fs-5">${{ number_format($nota->total, 2) }}</span>
                 </div>
+            </div>
+            
+            @if($nota->especificaciones)
+                <div class="d-flex align-items-start gap-2 text-muted small">
+                    <i class="bi bi-chat-left-text text-warning"></i>
+                    <em>"{{ Str::limit($nota->especificaciones, 45) }}"</em>
+                </div>
+            @endif
+        </div>
+
+        <div class="card-footer bg-white border-0 pb-3">
+            <a href="{{ route('notas.show', $nota->id) }}" class="btn btn-primary w-100 fw-bold shadow-sm">
+                Ver Detalles <i class="bi bi-arrow-right-short"></i>
+            </a>
+        </div>
+    </div>
+</div>
             @endforeach
         </div>
 
@@ -114,4 +125,13 @@
         </div>
       </div>
     </div>
+    <style>
+    .card-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
+    }
+    .card-hover:hover {
+        transform: translateY(-5px); /* Mueve la tarjeta hacia arriba */
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; /* Aumenta la sombra */
+    }
+</style>
 @endsection

@@ -77,12 +77,15 @@
                                         <td>
                                             <div class="d-flex gap-2">
                                                 
-                                                {{-- BOTÓN 1: INSTRUCCIONES (Usa Data Attributes) --}}
-                                                <button type="button" class="btn btn-sm btn-outline-primary btn-ver-instrucciones" 
-                                                        data-titulo="{{ $item->nombre }}"
-                                                        data-desc="{{ $item->descripcion }}">
-                                                    <i class="bi bi-eye"></i> Ver Detalle
-                                                </button>
+                                              {{-- BOTÓN 1: INSTRUCCIONES --}}
+{{-- Agregamos data-bs-toggle y data-bs-target para que abra el modal automáticamente --}}
+<button type="button" class="btn btn-sm btn-outline-primary btn-ver-instrucciones" 
+        data-bs-toggle="modal" 
+        data-bs-target="#modalInstrucciones"
+        data-titulo="{{ $item->nombre }}"
+        data-desc="{{ $item->descripcion }}">
+    <i class="bi bi-eye"></i> Ver Detalle
+</button>
 
                                                 {{-- BOTÓN 2: ACCIONES --}}
                                                 @if($item->tipo == 'urgente')
@@ -92,14 +95,16 @@
                                                         <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Listo</button>
                                                     </form>
                                                 @else
-                                                    {{-- Preventivos: Se abren en Modal --}}
-                                                    {{-- La clave aquí es 'data-frecuencia="{{ $item->frecuencia_dias ?? 0 }}"' --}}
-                                                    <button type="button" class="btn btn-sm btn-success btn-realizar"
-                                                            data-id="{{ $item->id }}"
-                                                            data-nombre="{{ $item->nombre }}"
-                                                            data-frecuencia="{{ $item->frecuencia_dias ?? 0 }}">
-                                                        <i class="bi bi-check-lg"></i> Realizar
-                                                    </button>
+                                                    {{-- BOTÓN 2: PREVENTIVOS --}}
+{{-- Agregamos data-bs-toggle y data-bs-target aquí también --}}
+<button type="button" class="btn btn-sm btn-success btn-realizar"
+        data-bs-toggle="modal" 
+        data-bs-target="#modalFinalizar"
+        data-id="{{ $item->id }}"
+        data-nombre="{{ $item->nombre }}"
+        data-frecuencia="{{ $item->frecuencia_dias ?? 0 }}">
+    <i class="bi bi-check-lg"></i> Realizar
+</button>
                                                 @endif
                                             </div>
                                         </td>
@@ -194,7 +199,8 @@
               <div class="mb-3">
                   <label class="form-label fw-bold text-primary">¿Cuándo toca la próxima revisión?</label>
                   <input type="date" name="proxima_fecha" id="finFecha" class="form-control form-control-lg" required>
-                  <div class="form-text">Calculado automáticamente (Hoy + Frecuencia). Puedes cambiarlo.</div>
+                  
+                  
               </div>
           </div>
           <div class="modal-footer">
@@ -206,53 +212,63 @@
   </div>
 </div>
 
-{{-- SCRIPT CORREGIDO Y ROBUSTO --}}
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         
-        // 1. Manejar botones de INSTRUCCIONES
+        // 1. Lógica para el Modal de INSTRUCCIONES
+        // Detectamos cuando se hace clic en cualquier botón de instrucciones
         const btnsInstrucciones = document.querySelectorAll('.btn-ver-instrucciones');
+        
         btnsInstrucciones.forEach(btn => {
             btn.addEventListener('click', function() {
+                // Recuperamos datos del botón
                 const titulo = this.getAttribute('data-titulo');
                 const desc = this.getAttribute('data-desc');
 
+                // Inyectamos los datos en el Modal
                 document.getElementById('instTitulo').innerText = titulo;
                 document.getElementById('instDesc').innerText = desc;
                 
-                new bootstrap.Modal(document.getElementById('modalInstrucciones')).show();
+                
             });
         });
 
-        // 2. Manejar botones de REALIZAR (Reprogramar)
+        // 2. Lógica para el Modal de FINALIZAR (Reprogramar)
         const btnsRealizar = document.querySelectorAll('.btn-realizar');
+        
         btnsRealizar.forEach(btn => {
             btn.addEventListener('click', function() {
+                // Recuperamos datos
                 const id = this.getAttribute('data-id');
                 const nombre = this.getAttribute('data-nombre');
-                // Convertimos a entero, si viene vacío usa 0
                 const frecuencia = parseInt(this.getAttribute('data-frecuencia')) || 0;
 
+                // Llenamos textos del modal
                 document.getElementById('finTitulo').innerText = nombre;
                 document.getElementById('finFrecuencia').innerText = frecuencia;
 
-                // Construir URL del formulario
+                // --- LOGICA DE URL DINÁMICA ---
+                // Definimos la ruta base con un placeholder ':id'
                 let urlBase = "{{ route('mantenimientos.completar', ':id') }}";
+                // Reemplazamos ':id' por el ID real del botón
                 urlBase = urlBase.replace(':id', id);
+                // Asignamos la nueva URL al formulario
                 document.getElementById('formFinalizar').action = urlBase;
 
+                // --- LÓGICA DE FECHAS ---
                 // Calcular Fecha: Hoy + Frecuencia
                 let hoy = new Date();
                 hoy.setDate(hoy.getDate() + frecuencia);
 
-                // Formatear fecha para input date (YYYY-MM-DD)
+                // Formatear fecha a YYYY-MM-DD para que el input type="date" la acepte
                 let dia = ("0" + hoy.getDate()).slice(-2);
                 let mes = ("0" + (hoy.getMonth() + 1)).slice(-2);
-                let fechaCalculada = hoy.getFullYear() + "-" + mes + "-" + dia;
+                let anio = hoy.getFullYear();
+                
+                let fechaCalculada = `${anio}-${mes}-${dia}`;
 
                 document.getElementById('finFecha').value = fechaCalculada;
-
-                new bootstrap.Modal(document.getElementById('modalFinalizar')).show();
             });
         });
 

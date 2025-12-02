@@ -7,21 +7,74 @@
 @section('contenido')
 
 <div class="container pb-5">
-    <h2 class="mb-4 text-primary"><i class="bi bi-calculator"></i> Corte de Caja: {{ $user->nombre }}</h2>
-
-    @if($corteExistente)
-        <div class="alert alert-success text-center p-4">
-            <h4><i class="bi bi-check-circle-fill"></i> ¡Corte Realizado!</h4>
-            <p class="mb-0">Ya has realizado el cierre de caja el día de hoy.</p>
-            <hr>
-            <p>Total Reportado: <strong>${{ number_format($corteExistente->total_general_reportado, 2) }}</strong></p>
-            <p>Diferencia: 
-                <span class="@if($corteExistente->diferencia < 0) text-danger @else text-success @endif fw-bold">
-                    ${{ number_format($corteExistente->diferencia, 2) }}
-                </span>
-            </p>
-            <button onclick="window.print()" class="btn btn-outline-dark mt-3"><i class="bi bi-printer"></i> Imprimir Comprobante</button>
+    
+    {{-- Encabezado con Turno Dinámico --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary mb-0"><i class="bi bi-calculator"></i> Corte de Caja</h2>
+            <p class="text-muted mb-0">Usuario: {{ $user->nombre }}</p>
         </div>
+        
+        {{-- Badge del Turno Detectado --}}
+        @if(isset($turnoActual))
+            <div class="text-end">
+                <small class="text-muted d-block">Turno Detectado:</small>
+                @if($turnoActual == 'matutino')
+                    <span class="badge bg-warning text-dark border"><i class="bi bi-sun-fill"></i> MATUTINO</span>
+                @elseif($turnoActual == 'vespertino')
+                    <span class="badge bg-primary border"><i class="bi bi-moon-stars-fill"></i> VESPERTINO</span>
+                @else
+                    <span class="badge bg-dark border"><i class="bi bi-clock-history"></i> EXTRAORDINARIO</span>
+                @endif
+            </div>
+        @endif
+    </div>
+
+    {{-- SI YA SE HIZO EL CORTE (PANTALLA DE ÉXITO) --}}
+    @if($corteExistente)
+        <div class="alert alert-success text-center p-5 shadow-sm">
+            <h1 class="display-4 text-success"><i class="bi bi-check-circle-fill"></i></h1>
+            <h3 class="fw-bold">¡Corte de Turno Finalizado!</h3>
+            <p class="fs-5">El reporte de este turno ha sido guardado correctamente.</p>
+            <hr>
+            
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Total Reportado:</span>
+                            <strong>${{ number_format($corteExistente->total_general_reportado, 2) }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Estado de Caja:</span>
+                            @if($corteExistente->diferencia == 0)
+                                <span class="text-success fw-bold">Cuadrada (Exacta)</span>
+                            @elseif($corteExistente->diferencia > 0)
+                                <span class="text-success fw-bold">Sobra ${{ $corteExistente->diferencia }}</span>
+                            @else
+                                <span class="text-danger fw-bold">Falta ${{ $corteExistente->diferencia }}</span>
+                            @endif
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-3">
+                <button onclick="window.print()" class="btn btn-outline-dark">
+                    <i class="bi bi-printer"></i> Imprimir Comprobante
+                </button>
+                
+                {{-- BOTÓN CLAVE: Salir para dar paso al siguiente turno --}}
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión y Entregar Turno
+                    </button>
+                </form>
+            </div>
+        </div>
+    
+    {{-- SI AÚN NO SE HACE EL CORTE (FORMULARIO) --}}
     @else
 
     <div class="row">
@@ -32,19 +85,25 @@
                 <div class="card-body">
                     <h5 class="card-title">Ventas Totales del Turno: ${{ number_format($totalVentas, 2) }}</h5>
                     <hr>
-                   <ul class="list-group list-group-flush">
-                        {{-- ... tus contadores de lavadora/secadora ... --}}
-                        
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-water text-primary"></i> Lavadoras</span>
+                            <span class="badge bg-primary rounded-pill">{{ $cantLavadoras }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-wind text-warning"></i> Secadoras</span>
+                            <span class="badge bg-warning text-dark rounded-pill">{{ $cantSecadoras }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-layers-fill text-success"></i> Servicios Doblado</span>
+                            <span class="badge bg-success rounded-pill">{{ $cantDoblado }}</span>
+                        </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             Transferencias Registradas
-                            {{-- Necesitamos calcular esto en el controlador si quieres que sea automático, 
-                                 pero generalmente esto lo reporta la empleada. 
-                                 Aquí mostraremos lo reportado al cerrar si ya existe corte --}}
-                            <span>(Según reporte)</span>
+                            <span>(Según reporte manual)</span>
                         </li>
                     </ul>
                     
-                    {{-- Total Comisiones --}}
                     <div class="alert alert-info mt-2 py-2">
                         <div class="d-flex justify-content-between">
                             <span>Comisión Empleada:</span>
@@ -53,11 +112,11 @@
                     </div>
                 </div>
                 <div class="card-footer bg-white">
-               {{-- Fondo sugerido --}}
                     <div class="bg-light p-2 rounded border mt-2 text-center">
                         <small class="text-muted">Fondo sugerido para siguiente turno:</small><br>
-                        <strong>$200.00</strong> {{-- O la cantidad fija que manejes --}}
+                        <strong>$200.00</strong>
                     </div>
+                </div>
             </div>
         </div>
 

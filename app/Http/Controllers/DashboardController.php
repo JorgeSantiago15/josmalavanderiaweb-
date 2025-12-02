@@ -152,18 +152,18 @@ class DashboardController extends Controller
         return view('terminados', compact('notasTerminadas'));
     }
     // 5. COBRAR Y ENTREGAR (Cierra el ciclo)
-    public function pagar($id)
-    {
-        $nota = Nota::findOrFail($id);
+   public function pagar($id)
+{
+    $nota = Nota::findOrFail($id);
+    
+    // AQUÍ ESTÁ LA CLAVE: Guardamos el momento exacto (now())
+    $nota->update([
+        'estado' => 'pagado',
+        'fecha_pagado' => now(), // <--- ESTO ES LO QUE TE FALTABA O FALLABA
+    ]);
 
-        $nota->estado = 'pagado';
-        $nota->fecha_pagado = now(); // ¡Importante! Esto define en qué corte de caja entra
-        $nota->fecha_entrega_estimada = now(); // Usamos este campo como fecha real de salida/entrega
-        $nota->save();
-
-        // Redirigimos a la vista de ticket o a pagados. Por ahora a pagados.
-        return redirect()->route('pagados')->with('success', '¡Servicio cobrado y entregado exitosamente!');
-    }
+    return redirect()->route('pagados')->with('success', 'Servicio cobrado correctamente.');
+}
 
     // 6. VISTA DE PAGADOS (Historial del día)
     public function indexPagados()

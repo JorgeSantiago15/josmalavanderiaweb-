@@ -32,4 +32,10 @@ class Nota extends Model
     {
         return $this->hasMany(NotaItem::class);
     }
+  // Relación: Una nota "pertenece a" un usuario (empleada)
+    public function user()
+    {
+        // Agregamos el segundo parámetro 'usuario_id' para indicar la llave foránea correcta
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
 }

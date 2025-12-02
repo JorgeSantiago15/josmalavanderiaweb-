@@ -11,23 +11,43 @@ use Carbon\Carbon;
 
 class CorteController extends Controller
 {
+    // FUNCIÓN PRIVADA: Determina el turno según la hora del reloj
+    private function determinarTurnoActual()
+    {
+        $hora = (int) now()->format('H'); // Obtiene solo la hora (0 a 23)
+
+        // De 8:00 AM a 2:59 PM (14:59)
+        if ($hora >= 8 && $hora < 15) {
+            return 'matutino';
+        }
+        // De 3:00 PM (15:00) a 9:59 PM (21:59)
+        elseif ($hora >= 15 && $hora < 22) {
+            return 'vespertino';
+        }
+        // Cualquier otra hora (Madrugada o muy noche)
+        else {
+            return 'extraordinario'; 
+        }
+    }
+
     public function index()
     {
         $user = Auth::user();
         $hoy = Carbon::today();
+        
+        // Calculamos el turno actual basado en la hora real, no en el usuario
+        $turnoActual = $this->determinarTurnoActual();
 
-        // 1. BUSCAR LO QUE VENDIÓ ESTA EMPLEADA HOY
+        // 1. BUSCAR VENTAS (Respetando filtro de fecha y usuario)
         $notasDelTurno = Nota::where('usuario_id', $user->id)
                              ->where('estado', 'pagado')
                              ->whereDate('fecha_pagado', $hoy)
                              ->get();
 
-        // 2. CALCULAR TOTALES MONETARIOS
+        // 2. TOTALES
         $totalVentas = $notasDelTurno->sum('total');
 
-        // 3. CONTAR LOS SERVICIOS (Para el reporte y comisiones)
-        // Buscamos dentro de los items de esas notas
-       // 3. CONTAR LOS SERVICIOS (Lógica mejorada)
+        // 3. DESGLOSE DE SERVICIOS
         $items = NotaItem::whereIn('nota_id', $notasDelTurno->pluck('id'))->with('producto')->get();
 
         $cantLavadoras = 0;
@@ -35,14 +55,13 @@ class CorteController extends Controller
         $cantDoblado = 0;
 
         foreach ($items as $item) {
-            // Caso A: Es un Servicio Completo (Vale por 3 cosas)
-            // Asegúrate que el nombre en la BD sea EXACTAMENTE este, o usa el ID del producto
+            // Lógica Servicio Completo
             if (str_contains($item->producto->nombre, 'Completo')) { 
                 $cantLavadoras += $item->cantidad;
                 $cantSecadoras += $item->cantidad;
-                $cantDoblado   += $item->cantidad; // ¡Aquí sumamos la comisión!
+                $cantDoblado   += $item->cantidad;
             } 
-            // Caso B: Es un servicio individual normal
+            // Lógica Normal
             else {
                 if ($item->producto->reporte_categoria == 'lavadora') $cantLavadoras += $item->cantidad;
                 if ($item->producto->reporte_categoria == 'secadora') $cantSecadoras += $item->cantidad;
@@ -50,27 +69,20 @@ class CorteController extends Controller
             }
         }
 
-        // 4. CALCULAR COMISIÓN ($5 por cada servicio de doblado)
+        // 4. COMISIONES
         $comisionDoblado = $cantDoblado * 5;
-
-        // 5. CALCULAR CUÁNTO DEBERÍA HABER EN CAJA (Ventas - Comisiones que se lleva)
         $totalEsperado = $totalVentas - $comisionDoblado;
 
-        // Verificamos si ya hizo un corte hoy para no dejarla hacer dos
+        // 5. VERIFICAR CORTE EXISTENTE
+        // Buscamos si ESTE usuario ya hizo corte HOY en ESTE turno (o en general hoy)
         $corteExistente = CorteCaja::where('usuario_id', $user->id)
                                    ->whereDate('fecha', $hoy)
                                    ->first();
 
         return view('corte.index', compact(
-            'totalVentas', 
-            'cantLavadoras', 
-            'cantSecadoras', 
-            'cantDoblado', 
-            'comisionDoblado', 
-            'totalEsperado',
-            'corteExistente',
-            'user',
-            'hoy'
+            'totalVentas', 'cantLavadoras', 'cantSecadoras', 'cantDoblado', 
+            'comisionDoblado', 'totalEsperado', 'corteExistente', 
+            'user', 'hoy', 'turnoActual' // Pasamos el turno a la vista
         ));
     }
 
@@ -82,10 +94,16 @@ class CorteController extends Controller
             'transferencias_reportado' => 'required|numeric',
         ]);
 
-        // Recalculamos todo para asegurar integridad (no confiamos en lo que envíe el front oculto)
         $user = Auth::user();
         $hoy = Carbon::today();
         
+        // Verificar doble candado: No permitir duplicados
+        $existe = CorteCaja::where('usuario_id', $user->id)->whereDate('fecha', $hoy)->first();
+        if($existe) {
+            return back()->withErrors('Ya existe un corte registrado para este usuario el día de hoy.');
+        }
+
+        // Recálculo de seguridad (copiado de la lógica anterior)
         $notasDelTurno = Nota::where('usuario_id', $user->id)
                              ->where('estado', 'pagado')
                              ->whereDate('fecha_pagado', $hoy)
@@ -93,26 +111,28 @@ class CorteController extends Controller
 
         $items = NotaItem::whereIn('nota_id', $notasDelTurno->pluck('id'))->with('producto')->get();
         
-        $cantLavadoras = $items->where('producto.reporte_categoria', 'lavadora')->sum('cantidad');
-        $cantSecadoras = $items->where('producto.reporte_categoria', 'secadora')->sum('cantidad');
-        $cantDoblado   = $items->where('producto.reporte_categoria', 'doblado')->sum('cantidad');
+        $cantLavadoras = 0; $cantSecadoras = 0; $cantDoblado = 0;
+        foreach ($items as $item) {
+            if (str_contains($item->producto->nombre, 'Completo')) { 
+                $cantLavadoras += $item->cantidad; $cantSecadoras += $item->cantidad; $cantDoblado += $item->cantidad;
+            } else {
+                if ($item->producto->reporte_categoria == 'lavadora') $cantLavadoras += $item->cantidad;
+                if ($item->producto->reporte_categoria == 'secadora') $cantSecadoras += $item->cantidad;
+                if ($item->producto->reporte_categoria == 'doblado')  $cantDoblado   += $item->cantidad;
+            }
+        }
         
         $totalVentas = $notasDelTurno->sum('total');
         $comisionPagada = $cantDoblado * 5;
-        $totalEsperadoEnCaja = $totalVentas - $comisionPagada; // Ventas puras menos la comisión que se lleva
-
-        // Lo que la empleada dice que tiene (Efectivo + Transferencias)
+        $totalEsperadoEnCaja = $totalVentas - $comisionPagada;
         $totalReportado = $request->efectivo_reportado + $request->transferencias_reportado;
-
-        // La Diferencia (¿Falta o sobra dinero?)
-        // Nota: Comparamos lo reportado contra (Lo esperado + Fondo inicial) si quisiéramos ser estrictos,
-        // pero usualmente el fondo se deja intacto. Aquí compararemos Venta vs Reporte.
         $diferencia = $totalReportado - $totalEsperadoEnCaja;
 
+        // GUARDAR CON EL TURNO AUTOMÁTICO
         CorteCaja::create([
             'usuario_id' => $user->id,
             'fecha' => $hoy,
-            'turno' => $user->turno_asignado,
+            'turno' => $this->determinarTurnoActual(), // <--- AQUÍ USAMOS LA LÓGICA DE HORARIOS
             'fondo_caja_inicial' => $request->fondo_caja,
             'total_ventas_calculado' => $totalVentas,
             'total_servicios_lavadora' => $cantLavadoras,
@@ -127,24 +147,13 @@ class CorteController extends Controller
 
         return redirect()->route('corte.index')->with('success', '¡Corte de caja guardado exitosamente!');
     }
-    // --- FUNCIONES EXCLUSIVAS DE GERENCIA ---
 
-    // 1. VER LISTA DE TODOS LOS CORTES
-    public function historial()
-    {
-        // Traemos los cortes con la información del usuario que lo hizo
-        // Ordenamos por fecha y hora (created_at) descendente
-        $cortes = CorteCaja::with('usuario')
-                           ->orderBy('fecha', 'desc')
-                           ->orderBy('created_at', 'desc')
-                           ->paginate(15); // Paginación para no saturar la pantalla
-
+    // ... (Mantén las funciones historial y show iguales) ...
+    public function historial() {
+        $cortes = CorteCaja::with('usuario')->orderBy('fecha', 'desc')->orderBy('created_at', 'desc')->paginate(15);
         return view('corte.historial', compact('cortes'));
     }
-
-    // 2. VER DETALLE DE UN CORTE PASADO (Read-Only)
-    public function show($id)
-    {
+    public function show($id) {
         $corte = CorteCaja::with('usuario')->findOrFail($id);
         return view('corte.show', compact('corte'));
     }

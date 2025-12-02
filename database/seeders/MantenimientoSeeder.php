@@ -21,7 +21,7 @@ class MantenimientoSeeder extends Seeder
             [
                 'nombre' => 'Red Hidráulica (Bombas y Tuberías)',
                 'frecuencia_dias' => 90,
-                'descripcion' => 'Revisar tuberías y uniones. Llaves sin sarro. Equipo hidroneumático: filtro bomba, válvula aire tanque y platinos.',
+                'descripcion' => 'Revisar fugas en tuberías y uniones. Llaves sin sarro y faciles de girar. Equipo hidroneumático: filtro bomba, válvula aire tanque y platinos.',
             ],
             [
                 'nombre' => 'Red Eléctrica (Cableado y Centros)',
@@ -77,12 +77,12 @@ class MantenimientoSeeder extends Seeder
         for ($i = 1; $i <= 10; $i++) {
             DB::table('mantenimientos')->insert([
                 'nombre' => "Lavadora #$i - Preventivo",
-                'descripcion' => "Limpieza general. Ruidos, ciclos, temperatura motor. Lubricar bujes/engrasar.",
+                'descripcion' => "Limpieza general. Revisar ruidos, ciclos completos, temperatura motor. Lubricar bujes/engrasar.",
                 'categoria' => 'maquinaria',
                 'tipo' => 'preventivo',
                 'frecuencia_dias' => 45,
-                // Truco: Las escalonamos un poco para que no toquen TODAS el mismo día exacto (opcional)
-                // O las dejamos todas para dentro de 45 días y tú las vas haciendo poco a poco.
+                
+                // las dejamos todas para dentro de 45 días y se van haciendo poco a poco.
                 'fecha_programada' => $hoy->copy()->addDays(45), 
                 'usuario_id' => $adminId,
                 'estado' => 'pendiente',

@@ -9,17 +9,25 @@ class NotaItem extends Model
 {
     use HasFactory;
 
+    protected $table = 'nota_items'; // Asegúrate que coincida con tu BD
+
     protected $fillable = [
-        'nota_id', 
-        'producto_id', 
-        'cantidad', 
-        'precio_unitario', 
-        'subtotal'
+        'nota_id',
+        'producto_id',
+        'cantidad',
+        'precio_unitario',
+        'subtotal',
     ];
 
-    // Relación inversa: Un item pertenece a un producto (para saber su nombre)
+    // ESTA ES LA FUNCIÓN QUE TE FALTA PARA QUE LOS CONTADORES FUNCIONEN
     public function producto()
     {
         return $this->belongsTo(Producto::class);
+    }
+    
+    // Relación inversa con nota (opcional pero recomendada)
+    public function nota()
+    {
+        return $this->belongsTo(Nota::class);
     }
 }
