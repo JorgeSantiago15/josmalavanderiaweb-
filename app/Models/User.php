@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // Importante para tu equipo móvil
+use Laravel\Sanctum\HasApiTokens; 
 
 class User extends Authenticatable
 {
@@ -16,9 +16,10 @@ class User extends Authenticatable
      * Los atributos que se pueden guardar masivamente.
      */
     protected $fillable = [
-        'nombre',            // <--- ESTE ES EL QUE FALTABA
-        'usuario',           // <--- ESTE TAMBIÉN
+        'nombre',            
+        'usuario',           
         'password',
+        'clave_visible',
         'tipo',
         'turno_asignado',
         'estatus',
