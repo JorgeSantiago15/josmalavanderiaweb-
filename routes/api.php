@@ -2,24 +2,43 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Models\CorteCaja;
-use App\Models\Producto;
+use App\Http\Controllers\MobileApiController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
 
-// Ruta de prueba para ver si la App conecta
+// 1. Ruta de prueba (Útil para ver si hay conexión sin loguearse)
 Route::get('/ping', function () {
-    return response()->json(['status' => 'ok', 'mensaje' => 'Conexión exitosa con Lavandería']);
+    return response()->json(['status' => 'ok', 'mensaje' => 'Conexión exitosa con Lavandería JOSMA']);
 });
 
-// Ruta para ver reporte de cortes (Para el Gerente)
-Route::get('/cortes', function () {
-    return CorteCaja::with('user')->latest()->take(30)->get();
-});
+// 2. Rutas Públicas de Autenticación
+Route::post('/login', [MobileApiController::class, 'login']);
+Route::post('/login-google', [MobileApiController::class, 'loginWithGoogle']);
 
-// Ruta para ver productos/mantenimiento
-Route::get('/productos', function () {
-    return Producto::all();
+// 3. Rutas Protegidas (Solo accesibles con Token válido)
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Datos del usuario actual
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // Módulo Mantenimientos (Semáforo)
+    Route::get('/mantenimientos', [MobileApiController::class, 'getMantenimientos']);
+    
+    // Módulo Cortes (Reportes Financieros)
+    Route::get('/cortes', [MobileApiController::class, 'getCortes']);
+    
+    // Módulo Usuarios (CRUD + Claves)
+    Route::get('/users', [MobileApiController::class, 'getUsers']);
+    Route::post('/users', [MobileApiController::class, 'createUser']);
+    Route::put('/users/{id}', [MobileApiController::class, 'updateUser']);
+    Route::delete('/users/{id}', [MobileApiController::class, 'deleteUser']);
+    
+    // Cerrar Sesión
+    Route::post('/logout', [MobileApiController::class, 'logout']);
 });
